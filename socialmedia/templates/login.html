@@ -1,0 +1,25 @@
+{% extends 'auth.html' %}
+{% block title %}Login{% endblock title %}
+{% block form %}
+<h1>Login</h1>
+<div class="Card p-3">
+    {% include "messages.html" %}
+
+    <form action="/login" method="post">
+
+            <div class="form-group">
+                <input class="form-control mb-3" type="email" name="email"
+                placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <input class="form-control mb-3" type="password" name="pass1"
+                placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">Login</button>
+    </form>
+
+
+
+
+</div>
+{% endblock form %}
