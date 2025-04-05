@@ -1,0 +1,16 @@
+{% extends 'auth.html' %}
+{% block title %}Comments{% endblock title %}
+{% block form %}
+<h1>Comments</h1>
+<div class="Card p-3">
+    {% include "messages.html" %}
+
+{% for p in post %}
+<h5><li>{{ p.comment }}</li></h5>
+<p>Commented By {{ p.commentedBy }}</p>
+<p>Commented on {{ p.commentedOn }}</p>
+{% endfor %}
+<hr>
+
+</div>
+{% endblock form %}
