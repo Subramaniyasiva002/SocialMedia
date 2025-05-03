@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import flash
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_manager,UserMixin,LoginManager,login_required,logout_user
+from flask_login import current_user
 import os
 from werkzeug.utils import secure_filename 
 from datetime import datetime    #for likes and commds
@@ -48,7 +49,8 @@ class Signup(UserMixin,db.Model):                     #Usemixin added
     lastname=db.Column(db.String(50))
     email=db.Column(db.String(50),unique=True)
     password=db.Column(db.String(1000))
-    phone_no=db.Column(db.Integer,unique=True)
+    phone_no=db.Column(db.String(10),unique=True)
+    profileimage=db.Column(db.String(500))
 
     def get_id(self):
         return self.id
@@ -69,15 +71,46 @@ class Posts(db.Model):
 class Comments(db.Model):
     comment_id=db.Column(db.Integer,primary_key=True)
     post_id=db.Column(db.Integer)
-    comment=db.column(db.String(500))
+    comment=db.Column(db.String(500))
     commentedBy=db.Column(db.String(100))
     commentedOn=db.Column(db.String(100))
 
+class Friends(db.Model):
+    friends_id=db.Column(db.Integer,primary_key=True)
+    user_id=db.Column(db.Integer)
+    request_id=db.Column(db.Integer)
+    isAccepted=db.Column(db.String(10))
+
+class Contact(db.Model):
+    contact_id=db.Column(db.Integer,primary_key=True)
+    email=db.Column(db.String(100))
+    description=db.Column(db.String(500))
 
 @app.route("/")
 def index():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))     #it is used for if user is not authenticated 
     data=Posts.query.all()
     return render_template("index.html",data=data)
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.route("/contact",methods=['GET','POST'])
+def contact():
+    if request.method=='POST':
+        email=request.form.get("email")
+        description=request.form.get("message")
+        query=Contact(email=email,description=description)
+        db.session.add(query)
+        db.session.commit()
+        flash("We will back to you soon!","success")
+        return render_template("contact.html")
+    return render_template("contact.html")
+
+
 
 @app.route("/signup",methods=['GET','POST'])
 def signup():
@@ -212,3 +245,100 @@ def comment(id):
 def viewcomment(id):
     post=Comments.query.filter_by(post_id=id).all()
     return render_template("comments.html",post=post)
+
+@app.route("/connect",methods=['GET','POST'])
+def connect():
+    users=Signup.query.all()
+    return render_template("connect.html",users=users)
+
+@app.route("/connectfriend/<path:ids>",methods=['GET'])
+def connectFriends(ids):
+    data=ids.split("/")
+    users=Signup.query.all()
+    d1=Friends.query.filter_by(user_id=data[1]).first()
+    d2=Friends.query.filter_by(request_id=data[0]).first()
+    if d1 and d2:
+        flash("Request already sent","primary")
+        return render_template("connect.html",users=users)
+    query=Friends(user_id=data[1],request_id=data[0],isAccepted="False")
+    db.session.add(query)
+    db.session.commit()
+    flash("Request is sent","success")
+
+    return render_template("connect.html",users=users)
+
+
+
+@app.route("/remove/<path:ids>",methods=['GET'])
+def remove(ids):
+    data=ids.split("/")
+    users=Signup.query.all()
+    d1=Friends.query.filter_by(user_id=data[1]).first()
+    d2=Friends.query.filter_by(request_id=data[0]).first()
+    if d1 and d2:
+        query=f"Delete from `friends` where `friends`.`user_id`={data[1]} and `friends`.`request_id`={data[0]}"
+        with db.engine.begin() as conn:
+            conn.exec_driver_sql(query)
+            flash("Request Cancelled","success")
+            return render_template("connect.html",users=users)
+    return render_template("connect.html",users=users)
+
+@app.route("/profile",methods=['GET','POST'])
+def profile():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    userdata=Signup.query.filter_by(email=current_user.email).first()
+    friends=Friends.query.filter_by(user_id=current_user.id).all()
+    getallposts=Posts.query.filter_by(email=current_user.email).all()
+    myids=[]
+    for i in friends:
+        signupdata=Signup.query.filter_by(id=i.request_id).first()
+        myids.append(signupdata)
+    return render_template("profile.html",userdata=userdata,myids=myids,getallposts=getallposts)
+        
+@app.route("/editprofile/<int:id>",methods=['GET','POST'])
+def editprofile(id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    userdata=Signup.query.filter_by(id=id).first()
+    return render_template("editprofile.html",userdata=userdata)
+
+
+@app.route("/updateprofile/<int:id>",methods=['GET','POST'])
+def updateprofile(id):
+    userdata=Signup.query.filter_by(email=current_user.email).first()
+    if request.method=="POST":
+        firstname=request.form.get("fname")
+        lastname=request.form.get("lname")
+        email=request.form.get("email")
+        phoneno=request.form.get("number")
+        file=request.files['profileimage']
+        if len(phoneno)!=10:
+            flash("Please enter 10 Digit Number!","warning")
+            return redirect(url_for("editprofile",id=id))
+        if file and allowed_files(file.filename):
+            filename=secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+            query=f"UPDATE `signup` SET `firstname`='{firstname}',`lastname`='{lastname}',`email`='{email}',`phone_no`='{phoneno}',`profileimage`='{file.filename}' WHERE `signup`.`id`='{id}'"
+            with db.engine.begin() as conn:
+                conn.exec_driver_sql(query)
+                flash("Profile Update Success","success")
+                return redirect(url_for('profile'))
+        else:
+            query1=f"UPDATE `signup` SET `firstname`='{firstname}',`lastname`='{lastname}',`email`='{email}',`phone_no`='{phoneno}' WHERE `signup`.`id`='{id}'"
+            with db.engine.begin() as conn:
+                conn.exec_driver_sql(query1)
+                flash("Profile Update Success","success")
+                return redirect(url_for('profile'))
+    return render_template("profile.html",userdata=userdata)
+
+
+@app.route("/accept/<path:ids>",methods=['GET'])
+def acceptfriendreq(ids):
+    data=ids.split("/")
+    query=f"UPDATE `friends` SET `isAccepted`='{True}' WHERE `friends`.`request_id`='{data[0]}' and `friends`.user_id='{data[1]}'"
+    with db.engine.begin() as conn:
+        conn.exec_driver_sql(query)
+        flash("Friend Request Accepted","success")
+        return redirect(url_for('profile'))
+    

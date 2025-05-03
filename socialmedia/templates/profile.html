@@ -1,0 +1,83 @@
+{% extends 'auth.html' %}
+{% block title %}Profile{% endblock title %}
+
+{% block form %}
+<h1 class="p-4">View Profile</h1>
+{% include "messages.html" %}
+<div class="Card p-3">
+
+    <img class="profileimg p-4" src="{{url_for('static', filename='uploads/' + userdata.profileimage)}}" alt="Profile Image" height="300px" width="400px">
+    <h5 class="text-white">Name: {{userdata.firstname}} {{userdata.lastname}}</h5>
+    <hr>
+    <h5 class="text-white">Email: {{userdata.email}}</h5>
+    <hr>
+    <h5 class="text-white">Phone: {{userdata.phone_no}}</h5>
+    <hr>
+    <a href="/editprofile/{{userdata.id}}" class="btn btn-outline-primary">Edit Profile</a>
+
+
+
+</div>
+{% endblock form %}
+
+{% block body %}
+
+<div class="container m-4">
+    <h1 class="text-center">Friends</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Profile</th>
+                <th scope="col">Username</th>
+                <th scope="col">Accept</th>
+                <th scope="col">Reject</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for friend in myids %}
+            <tr>
+                <th scope="row"><img src="{{url_for('static',filename='uploads/' + friend.profileimage)}}" height="100px" width="100px" alt=""></th>
+                <th scope="row">{{friend.firstname}} {{friend.lastname}}</th>
+                <th scope="row"><a href="/accept/{{friend.id}}/{{current_user.id}}"><i class="fa-solid fa-check fa-beat fa-2xl"></i></a></th>
+                <th scope="row"><a href="/remove/{{friend.id}}/{{current_user.id}}"><i class="fa-solid fa-xmark fa-beat fa-2xl"></i></a></th>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+<h1 class="text-center">My Posts</h1>
+    <div class="container">
+        <div class="row g-4">
+          {% for d in getallposts | reverse %}
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="card shadow-sm border-0 h-100">
+              <img src="{{url_for('static',filename='uploads/'+ d.image)}}" class="card-img-top" alt="{{ d.title }}">
+              <div class="card-body">
+                <h5 class="card-title">{{ d.title }}</h5>
+                <p class="card-text text-muted">{{ d.description }}</p>
+                <small class="text-muted">Uploaded on {{ d.date }} by {{ d.name }}</small>
+                <small class="text-muted">Uploaded Time {{ d.time }} </small>
+                <a href="/like/{{d.post_id}}"> <h5><i class="fa-regular fa-heart fa-beat fa-sm" style="color: #f70808;"></i> Like</h5> </a>
+                <h5><i class="fa-solid fa-thumbs-up"></i> Liked By {{d.likes}} <a href="/viewcomment/{{d.post_id}}"><i class="fa-solid fa-eye"></i>  View Comments</a></h5>
+                
+                <hr>
+                <form action="/comment/{{d.post_id}}" method="post">
+                    <input type="hidden" name="commented" value="{{current_user.firstname}} {{current_user.lastname}}">
+                    <label for="comment">Add Your Comments</label>
+                    <textarea name="comment" class="form-control mb-3 mtb-3" required></textarea>
+                    <button class="btn btn-primary">Add Comment</button>                
+                </form>
+              </div>
+              <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                <a href="static/assets/img/masonry-portfolio/masonry-portfolio-1.jpg" title="View" data-gallery="portfolio-gallery-app" class="btn btn-outline-primary btn-sm"><i class="bi bi-zoom-in"></i> View</a>
+                <a href="portfolio-details.html" title="More Details" class="btn btn-outline-secondary btn-sm"><i class="bi bi-link-45deg"></i> Details</a>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+          {% endfor %}
+        </div><!-- End Portfolio Container -->
+      </div>
+  
+
+{% endblock body %}

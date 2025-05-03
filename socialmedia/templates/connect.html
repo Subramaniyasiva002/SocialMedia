@@ -1,0 +1,35 @@
+{% extends 'auth.html' %}
+
+{% block forms %}
+
+{% endblock forms %}
+
+{% block body %}
+
+
+
+<h1 class="text-center">Connect Now</h1>
+{% include "messages.html" %}
+<div class="container m-4">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Username</th>
+                <th scope="col">Add friend</th>]
+                <th scope="col">Remove friend</th>
+            </tr>
+        </thead>
+        <tbody>
+           {% for user in users %}
+           <tr>
+           <th scope="row">{{user.firstname}} {{user.lastname}}</th>
+           <th scpope="row"><a href="/connectfriend/{{user.id}}/{{current_user.id}}" class="btn btn-outline-primary">Add</a></th>
+           <th scpope="row"><a href="/remove/{{user.id}}/{{current_user.id}}" class="btn btn-outline-dark">Remove</a></th>
+           </tr>
+           {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock body %}

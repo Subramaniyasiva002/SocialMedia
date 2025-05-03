@@ -1,21 +1,21 @@
 {% extends 'loginbase.html' %}
-{% block title %}Login{% endblock title %}
+{% block title %}Contact{% endblock title %}
 {% block form %}
-<h1>Login</h1>
+<h1>Contact</h1>
 <div class="Card p-3">
     {% include "messages.html" %}
 
-    <form action="/login" method="post">
+    <form action="/contact" method="post">
 
             <div class="form-group">
                 <input class="form-control mb-3" type="email" name="email"
                 placeholder="Enter your email" required>
             </div>
             <div class="form-group">
-                <input class="form-control mb-3" type="password" name="pass1"
-                placeholder="Enter password" required>
+                <textarea class="form-control mb-3" name="message" cols="10" rows="10"
+                placeholder="Enter your message" required></textarea>
             </div>
-            <button type="submit" class="btn btn-outline-primary">Login</button>
+            <button type="submit" class="btn btn-outline-primary">Submit</button>
     </form>
 
 

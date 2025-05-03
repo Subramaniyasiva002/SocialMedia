@@ -59,8 +59,8 @@
           {% endif %}
 
 
-
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -96,7 +96,7 @@
 
     <div class="container">
       <div class="row g-4">
-        {% for d in data %}
+        {% for d in data | reverse %}
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
           <div class="card shadow-sm border-0 h-100">
             <img src="{{url_for('static',filename='uploads/'+ d.image)}}" class="card-img-top" alt="{{ d.title }}">

@@ -1,0 +1,8 @@
+pip install flask
+pip install -U Flask-SQLAlchemy
+pip install mysqlclient
+pip install Flask-Login
+
+run the falsk application : flask --app app run --debug
+
+or   in app.py file last line is " app.run(debug=True)  "  then click the run button
