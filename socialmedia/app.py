@@ -1,13 +1,14 @@
 from flask import Flask,redirect,render_template,request,url_for
 from flask.globals import session,request
 from flask_sqlalchemy import SQLAlchemy
-from flask import flash
+from flask import flash,jsonify
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_manager,UserMixin,LoginManager,login_required,logout_user
 from flask_login import current_user
 import os
 from werkzeug.utils import secure_filename 
 from datetime import datetime    #for likes and commds
+from sqlalchemy.inspection import inspect  # ✅ This works with SQLAlchemy models
 
 local_server=True
 app=Flask(__name__)
@@ -43,7 +44,14 @@ class Test(db.Model):
     name=db.Column(db.String(60))
 
 
-class Signup(UserMixin,db.Model):                     #Usemixin added 
+class Serializer(object):
+    def serialize(self):
+        return {c:getattr(self,c) for c in inspect(self).attrs.keys()}
+    @staticmethod
+    def serialize_list(l):
+        return [m.serialize() for m in l]
+
+class Signup(UserMixin,db.Model,Serializer):                     #Usemixin added 
     id=db.Column(db.Integer,primary_key=True)
     firstname=db.Column(db.String(50))
     lastname=db.Column(db.String(50))
@@ -85,6 +93,8 @@ class Contact(db.Model):
     contact_id=db.Column(db.Integer,primary_key=True)
     email=db.Column(db.String(100))
     description=db.Column(db.String(500))
+
+
 
 @app.route("/")
 def index():
@@ -342,3 +352,27 @@ def acceptfriendreq(ids):
         flash("Friend Request Accepted","success")
         return redirect(url_for('profile'))
     
+
+#flask API
+
+@app.route('/api/users',methods=['GET'])
+def users():
+    user={
+        "username":"siva",
+        "salary":10000,
+        "role":"developer"
+    }
+    #return json.dumps(user)
+    return jsonify(user)
+
+@app.route("/api/signup",methods=['GET'])
+def sign():
+    data=Signup.query.all()
+    return jsonify(Signup.serialize_list(data))
+
+
+#for specific id data retieve
+@app.route("/api/signup/<int:id>",methods=['GET'])
+def signu(id):
+    data=Signup.query.get(id)
+    return jsonify(data.serialize())
